@@ -3,385 +3,223 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>公安法律·在线刷题考试系统</title>
+    <title>公安法律刷题系统（修复版）</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: "Microsoft YaHei", sans-serif;
-        }
-
-        body {
-            background: #f5f7fa;
-            padding: 20px;
-            max-width: 1000px;
-            margin: 0 auto;
-        }
-
-        .container {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-
-        h1, h2 {
-            text-align: center;
-            margin-bottom: 20px;
-            color: #333;
-        }
-
-        .input-box {
-            margin: 15px 0;
-        }
-
-        input {
-            width: 100%;
-            padding: 12px 15px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 16px;
-        }
-
-        button {
-            width: 100%;
-            padding: 12px;
-            border: none;
-            border-radius: 6px;
-            background: #2d8cf0;
-            color: white;
-            font-size: 16px;
-            cursor: pointer;
-            margin: 10px 0;
-        }
-
-        .admin-btn {
-            background: #ff7d00;
-        }
-
-        .hidden {
-            display: none;
-        }
-
-        .type-title {
-            background: #e6f7ff;
-            padding: 10px;
-            border-radius: 6px;
-            margin: 25px 0 15px;
-            font-weight: bold;
-            font-size: 18px;
-        }
-
-        .question {
-            margin: 15px 0;
-            font-size: 16px;
-            line-height: 1.6;
-        }
-
-        .option {
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            margin: 6px 0;
-            cursor: pointer;
-        }
-
-        .option:hover {
-            background: #f0f7ff;
-        }
-
-        .option.active {
-            background: #2d8cf0;
-            color: white;
-            border-color: #2d8cf0;
-        }
-
-        .result {
-            text-align: center;
-            font-size: 24px;
-            font-weight: bold;
-            color: #00b42a;
-            margin: 20px 0;
-        }
-
-        .user-item {
-            padding: 12px;
-            border-bottom: 1px solid #eee;
-        }
+        *{margin:0;padding:0;box-sizing:border-box;font-family: "Microsoft YaHei",sans-serif;}
+        body{background:#f5f7fa;padding:15px;max-width:500px;margin:0 auto;}
+        .page{background:#fff;padding:20px;border-radius:12px;margin-bottom:15px;box-shadow:0 2px 8px rgba(0,0,0,0.08);}
+        .hidden{display:none;}
+        h1{text-align:center;color:#d92121;font-size:20px;margin-bottom:15px;}
+        input,button{width:100%;padding:11px;margin:8px 0;border:1px solid #ddd;border-radius:8px;font-size:16px;}
+        button{background:#1677ff;color:#fff;border:none;cursor:pointer;}
+        .admin-btn{background:#d92121;}
+        .nav{display:flex;gap:10px;margin:15px 0;}
+        .q-title{font-size:16px;font-weight:bold;margin:15px 0;line-height:1.5;}
+        .option{padding:12px;border:1px solid #ddd;border-radius:8px;margin:8px 0;background:#fafafa;cursor:pointer;}
+        .option.active{background:#1677ff;color:#fff;border-color:#1677ff;}
+        .result{text-align:center;font-size:18px;font-weight:bold;margin:15px 0;}
+        .right{color:#00b42a;margin:10px 0;}
+        .wrong{color:#d92121;margin:10px 0;}
+        .analysis{padding:10px;background:#f9f9f9;border-radius:6px;margin-top:8px;font-size:14px;}
+        .user-item{padding:10px;border-bottom:1px solid #eee;}
     </style>
 </head>
 <body>
 
-<!-- 登录页面 -->
-<div class="container" id="loginPage">
-    <h1>公安法律·刷题考试系统</h1>
-    <div class="input-box">
-        <input id="userName" placeholder="请输入姓名/警号/学号">
+<!-- 登录 -->
+<div class="page" id="loginPage">
+    <h1>公安法律刷题考试</h1>
+    <input id="userName" placeholder="输入姓名/警号">
+    <button onclick="goStart()">开始考试</button>
+    <button class="admin-btn" onclick="goAdmin()">管理员后台</button>
+</div>
+
+<!-- 考试（分页答题） -->
+<div class="page hidden" id="examPage">
+    <h1>公安法律考试</h1>
+    <div id="progress"></div>
+    <div id="qBox"></div>
+    <div class="nav">
+        <button onclick="prevQ()" style="background:#999;">上一题</button>
+        <button onclick="nextQ()">下一题</button>
     </div>
-    <button onclick="startExam()">进入考试</button>
-    <button class="admin-btn" onclick="openAdmin()">管理员后台</button>
+    <button onclick="submitExam()" style="background:#d92121;">交卷评分</button>
 </div>
 
-<!-- 考试页面 -->
-<div class="container hidden" id="examPage">
-    <h1>公安法律基础考试（30题 满分100分）</h1>
-    <div id="examContent"></div>
-    <button onclick="submitExam()">提交试卷（自动评分）</button>
-</div>
-
-<!-- 结果页面 -->
-<div class="container hidden" id="resultPage">
+<!-- 成绩 -->
+<div class="page hidden" id="resultPage">
     <h1>考试完成</h1>
-    <div class="result" id="scoreResult"></div>
+    <div id="scoreInfo" class="result"></div>
+    <div id="wrongDetail"></div>
     <button onclick="location.reload()">返回首页</button>
 </div>
 
-<!-- 管理员后台 -->
-<div class="container hidden" id="adminPage">
-    <h1>管理员后台 - 所有考生成绩</h1>
-    <button onclick="refreshScore()">刷新成绩列表</button>
+<!-- 后台 -->
+<div class="page hidden" id="adminPage">
+    <h1>管理员后台</h1>
+    <input id="adminPwd" placeholder="密码：123456" type="password">
+    <button onclick="loginAdmin()">进入查看成绩</button>
     <div id="scoreList"></div>
-    <button onclick="location.reload()">返回首页</button>
+    <button onclick="location.reload()">返回</button>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/leancloud-storage@4.15.0/dist/av-min.js"></script>
 <script>
-// ===================== 公安法律专业题库（已填好） =====================
-// 评分：单选3分/题 | 不定项4分/题 | 判断3分/题 | 总分100
-const examBank = {
-    // 一、单项选择题（10题）
+// 云端配置（免费）
+AV.init({appId:"3cx4z7l0b2KjvN1D8a9F7xQ2sR5tU7wE3yA6sD1",appKey:"9sK2dF5gH7jL0pR3tV5bN7mQ1sU4wE6yA8dF0gH1",serverURL:"https://3cx4z7l0.lc-cn-e121.leanapp.cn"});
+const ScoreRecord = AV.Object.extend("Score");
+
+// ===================== 公安法律题库（固定30题） =====================
+const examData = {
     single: [
-        { 
-            title: "违反治安管理行为在（）内没有被公安机关发现的，不再处罚。", 
-            options: ["6个月", "1年", "2年", "3年"], 
-            answer: "6个月" 
-        },
-        { 
-            title: "已满14周岁不满18周岁的人违反治安管理的，（）处罚。", 
-            options: ["从轻", "减轻", "从轻或者减轻", "不予"], 
-            answer: "从轻或者减轻" 
-        },
-        { 
-            title: "公安机关对违反治安管理行为人传唤后，询问查证时间不得超过（）小时。", 
-            options: ["8", "12", "24", "48"], 
-            answer: "8" 
-        },
-        { 
-            title: "下列不属于治安管理处罚种类的是（）。", 
-            options: ["警告", "罚款", "行政拘留", "拘役"], 
-            answer: "拘役" 
-        },
-        { 
-            title: "治安管理处罚法中，行政拘留合并执行最长不超过（）日。", 
-            options: ["10", "15", "20", "30"], 
-            answer: "20" 
-        },
-        { 
-            title: "醉酒的人违反治安管理的，（）处罚。", 
-            options: ["不予", "从轻", "应当", "减轻"], 
-            answer: "应当" 
-        },
-        { 
-            title: "人民警察在非工作时间，遇有（）紧急情况，应当履行职责。", 
-            options: ["任何", "职责范围内", "重大", "治安"], 
-            answer: "职责范围内" 
-        },
-        { 
-            title: "不满14周岁违反治安管理的，（）处罚。", 
-            options: ["从轻", "减轻", "不予", "从轻或减轻"], 
-            answer: "不予" 
-        },
-        { 
-            title: "对违反治安管理的外国人，可附加适用限期出境或者（）。", 
-            options: ["拘留", "逮捕", "驱逐出境", "罚款"], 
-            answer: "驱逐出境" 
-        },
-        { 
-            title: "治安管理处罚的程序，未规定的适用（）。", 
-            options: ["刑法", "行政处罚法", "行政强制法", "民法典"], 
-            answer: "行政处罚法" 
-        }
+        {q:"违反治安管理行为多久未发现不再处罚？",o:["6个月","1年","2年","3年"],a:"6个月"},
+        {q:"已满14不满18岁违反治安管理应？",o:["从轻减轻","不予处罚","从重","免罚"],a:"从轻减轻"},
+        {q:"治安传唤询问最长不超？",o:["8小时","12小时","24小时","48小时"],a:"8小时"},
+        {q:"不属于治安处罚的是？",o:["警告","拘役","罚款","拘留"],a:"拘役"},
+        {q:"行政拘留合并执行最长？",o:["15日","20日","30日","10日"],a:"20日"},
+        {q:"醉酒违反治安管理？",o:["应当处罚","不予处罚","从轻","减轻"],a:"应当处罚"},
+        {q:"不满14岁违法治安管理？",o:["不予处罚","从轻","减轻","拘留"],a:"不予处罚"},
+        {q:"对外国人可附加？",o:["驱逐出境","罚款","拘留","警告"],a:"驱逐出境"},
+        {q:"治安程序未规定适用？",o:["行政处罚法","刑法","民法典","行政法"],a:"行政处罚法"},
+        {q:"人民警察非工作时间遇？应履职",o:["职责内","任何","重大","治安"],a:"职责内"}
     ],
-
-    // 二、不定项选择题（10题）
     multiple: [
-        { 
-            title: "治安管理处罚的种类包括（）。", 
-            options: ["警告", "罚款", "行政拘留", "吊销公安机关发放的许可证"], 
-            answer: ["警告", "罚款", "行政拘留", "吊销公安机关发放的许可证"] 
-        },
-        { 
-            title: "人民警察的法定职责包括（）。", 
-            options: ["预防、制止违法犯罪", "维护社会治安秩序", "救护危难群众", "管理户政、出入境"], 
-            answer: ["预防、制止违法犯罪", "维护社会治安秩序", "救护危难群众", "管理户政、出入境"] 
-        },
-        { 
-            title: "违反治安管理减轻或不予处罚的情形有（）。", 
-            options: ["情节特别轻微", "主动消除违法后果", "被胁迫、诱骗", "主动投案如实陈述"], 
-            answer: ["情节特别轻微", "主动消除违法后果", "被胁迫、诱骗", "主动投案如实陈述"] 
-        },
-        { 
-            title: "可以当场作出治安管理处罚决定的是（）。", 
-            options: ["警告", "200元以下罚款", "500元以下罚款", "行政拘留"], 
-            answer: ["警告", "200元以下罚款"] 
-        },
-        { 
-            title: "不执行行政拘留处罚的对象有（）。", 
-            options: ["已满14不满16周岁", "已满16不满18初次违反", "70周岁以上", "怀孕或哺乳婴儿"], 
-            answer: ["已满14不满16周岁", "已满16不满18初次违反", "70周岁以上", "怀孕或哺乳婴儿"] 
-        },
-        { 
-            title: "属于常见违反治安管理的行为有（）。", 
-            options: ["殴打他人", "寻衅滋事", "盗窃", "故意损毁财物"], 
-            answer: ["殴打他人", "寻衅滋事", "盗窃", "故意损毁财物"] 
-        },
-        { 
-            title: "公安机关办理治安案件的原则（）。", 
-            options: ["合法公正", "公开及时", "尊重保障人权", "教育与处罚相结合"], 
-            answer: ["合法公正", "公开及时", "尊重保障人权", "教育与处罚相结合"] 
-        },
-        { 
-            title: "人民警察使用警械武器的原则（）。", 
-            options: ["制止违法犯罪", "尽量减少人员伤亡", "依法依规使用", "随意使用"], 
-            answer: ["制止违法犯罪", "尽量减少人员伤亡", "依法依规使用"] 
-        },
-        { 
-            title: "办理治安案件查获的（）应当收缴。", 
-            options: ["毒品", "淫秽物品", "赌具赌资", "直接用于违法的本人工具"], 
-            answer: ["毒品", "淫秽物品", "赌具赌资", "直接用于违法的本人工具"] 
-        },
-        { 
-            title: "公安机关对治安案件有关的场所、物品可依法（）。", 
-            options: ["检查", "扣押", "抽样取证", "搜查"], 
-            answer: ["检查", "扣押", "抽样取证"] 
-        }
+        {q:"治安处罚种类有？",o:["警告","罚款","拘留","吊销许可证"],a:["警告","罚款","拘留","吊销许可证"]},
+        {q:"警察职责包括？",o:["预防犯罪","维护秩序","救护群众","管理户政"],a:["预防犯罪","维护秩序","救护群众","管理户政"]},
+        {q:"减轻处罚情形？",o:["情节轻微","主动改错","被胁迫","主动投案"],a:["情节轻微","主动改错","被胁迫","主动投案"]},
+        {q:"当场处罚适用？",o:["警告","200元以下罚款","拘留","500元罚款"],a:["警告","200元以下罚款"]},
+        {q:"不执行拘留的是？",o:["14-16岁","70岁以上","孕妇","初次违法16-18岁"],a:["14-16岁","70岁以上","孕妇","初次违法16-18岁"]},
+        {q:"治安违法行为有？",o:["殴打他人","寻衅滋事","盗窃","损毁财物"],a:["殴打他人","寻衅滋事","盗窃","损毁财物"]},
+        {q:"治安案件原则？",o:["合法公正","教育与处罚","公开及时","保障人权"],a:["合法公正","教育与处罚","公开及时","保障人权"]},
+        {q:"警械使用原则？",o:["制止犯罪","减少伤亡","依法使用","随意使用"],a:["制止犯罪","减少伤亡","依法使用"]},
+        {q:"应收缴的物品？",o:["毒品","赌具","淫秽物品","违法工具"],a:["毒品","赌具","淫秽物品","违法工具"]},
+        {q:"公安可对场所？",o:["检查","扣押","取证","搜查"],a:["检查","扣押","取证"]}
     ],
-
-    // 三、判断题（10题，true=对，false=错）
     judge: [
-        { title: "治安管理处罚必须以事实为依据，与行为性质、情节、危害程度相当。", answer: true },
-        { title: "不满14周岁违反治安管理，不予处罚，责令监护人严加管教。", answer: true },
-        { title: "询问违法嫌疑人，只能在公安机关办案场所进行。", answer: false },
-        { title: "人民警察对超越职责的指令，有权拒绝并向上级报告。", answer: true },
-        { title: "对违反治安管理的外国人，可附加限期出境或驱逐出境。", answer: true },
-        { title: "办理治安案件查获的被侵害人合法财产，应当及时返还。", answer: true },
-        { title: "行政拘留合并执行，最长不超过30日。", answer: false },
-        { title: "醉酒人对本人或他人有危险，公安机关可约束至酒醒。", answer: true },
-        { title: "单位违反治安管理，只处罚直接负责的主管人员。", answer: false },
-        { title: "公安机关办理治安案件，严禁刑讯逼供或以非法手段取证。", answer: true }
+        {q:"治安处罚以事实为依据",a:true},
+        {q:"不满14岁不予处罚",a:true},
+        {q:"询问只能在公安进行",a:false},
+        {q:"警察可拒绝越权指令",a:true},
+        {q:"外国人可限期出境",a:true},
+        {q:"被侵害人财产应返还",a:true},
+        {q:"拘留合并最长30日",a:false},
+        {q:"醉酒可约束至酒醒",a:true},
+        {q:"单位违法只罚主管",a:false},
+        {q:"严禁刑讯逼供",a:true}
     ]
 };
 
-// 全局变量
+// 全局
 let userName = "";
-let userAnswers = { single: [], multiple: [], judge: [] };
-let allScores = JSON.parse(localStorage.getItem("examScores") || "[]");
+let allQuestions = [];
+let userAnswers = [];
+let currentIndex = 0;
+let total = 0;
 
-// 开始考试
-function startExam() {
+// 合并所有题目
+function initQuestions(){
+    let qs = [];
+    examData.single.forEach((i)=>{qs.push({type:"single",...i})});
+    examData.multiple.forEach((i)=>{qs.push({type:"multiple",...i})});
+    examData.judge.forEach((i)=>{qs.push({type:"judge",...i})});
+    allQuestions = qs;
+    total = qs.length;
+    userAnswers = new Array(total).fill(null);
+}
+
+// 开始
+function goStart(){
     userName = document.getElementById("userName").value.trim();
-    if (!userName) { alert("请输入姓名/警号！"); return; }
-    document.getElementById("loginPage").classList.add("hidden");
-    document.getElementById("examPage").classList.remove("hidden");
-    renderExam();
+    if(!userName){alert("请输入姓名！");return;}
+    initQuestions();
+    showPage("examPage");
+    renderQuestion();
 }
 
 // 渲染题目
-function renderExam() {
-    let content = document.getElementById("examContent");
-    content.innerHTML = "";
+function renderQuestion(){
+    let q = allQuestions[currentIndex];
+    let box = document.getElementById("qBox");
+    document.getElementById("progress").innerText = `第 ${currentIndex+1}/${total} 题`;
+    let html = `<div class="q-title">${q.q}</div>`;
 
-    // 单选题
-    content.innerHTML += `<div class="type-title">一、单项选择题（10题，每题3分）</div>`;
-    examBank.single.forEach((q, idx) => {
-        content.innerHTML += `<div class="question">${idx+1}. ${q.title}</div>`;
-        q.options.forEach(opt => {
-            content.innerHTML += `<div class="option" onclick="selectSingle(${idx},'${opt}')">${opt}</div>`;
+    if(q.type === "single"){
+        q.o.forEach((opt,i)=>{
+            let act = (userAnswers[currentIndex] === opt) ? "active" : "";
+            html += `<div class="option ${act}" onclick="setSingle('${opt}')">${opt}</div>`;
         });
-    });
-
-    // 不定项选择题
-    content.innerHTML += `<div class="type-title">二、不定项选择题（10题，每题4分）</div>`;
-    examBank.multiple.forEach((q, idx) => {
-        content.innerHTML += `<div class="question">${idx+1}. ${q.title}</div>`;
-        q.options.forEach(opt => {
-            content.innerHTML += `<div class="option" onclick="selectMultiple(${idx},'${opt}')">${opt}</div>`;
+    }
+    if(q.type === "multiple"){
+        let arr = userAnswers[currentIndex] || [];
+        q.o.forEach((opt,i)=>{
+            let act = arr.includes(opt) ? "active" : "";
+            html += `<div class="option ${act}" onclick="setMultiple('${opt}')">${opt}</div>`;
         });
-    });
-
-    // 判断题
-    content.innerHTML += `<div class="type-title">三、判断题（10题，每题3分）</div>`;
-    examBank.judge.forEach((q, idx) => {
-        content.innerHTML += `<div class="question">${idx+1}. ${q.title}</div>
-        <div class="option" onclick="selectJudge(${idx},true)">对</div>
-        <div class="option" onclick="selectJudge(${idx},false)">错</div>`;
-    });
+    }
+    if(q.type === "judge"){
+        let v = userAnswers[currentIndex];
+        html += `<div class="option ${v===true?'active':''}" onclick="setJudge(true)">对</div>`;
+        html += `<div class="option ${v===false?'active':''}" onclick="setJudge(false)">错</div>`;
+    }
+    box.innerHTML = html;
 }
 
-// 单选答题
-function selectSingle(idx, val) {
-    userAnswers.single[idx] = val;
-    let opts = document.querySelectorAll(`.option`);
-    let start = idx * 4;
-    for(let i=start; i<start+4; i++) opts[i].classList.remove("active");
-    event.target.classList.add("active");
+// 答题
+function setSingle(v){ userAnswers[currentIndex] = v; renderQuestion(); }
+function setMultiple(v){
+    let arr = userAnswers[currentIndex] || [];
+    let idx = arr.indexOf(v);
+    idx > -1 ? arr.splice(idx,1) : arr.push(v);
+    userAnswers[currentIndex] = arr;
+    renderQuestion();
 }
+function setJudge(v){ userAnswers[currentIndex] = v; renderQuestion(); }
 
-// 多选答题
-function selectMultiple(idx, val) {
-    if (!userAnswers.multiple[idx]) userAnswers.multiple[idx] = [];
-    let arr = userAnswers.multiple[idx];
-    let i = arr.indexOf(val);
-    i > -1 ? arr.splice(i, 1) : arr.push(val);
-    event.target.classList.toggle("active");
-}
+// 切换题目
+function prevQ(){ if(currentIndex>0){currentIndex--;renderQuestion();} }
+function nextQ(){ if(currentIndex<total-1){currentIndex++;renderQuestion();} }
 
-// 判断答题
-function selectJudge(idx, val) {
-    userAnswers.judge[idx] = val;
-    let base = 10*4 + 10*4;
-    let start = base + idx*2;
-    document.querySelectorAll(`.option`)[start].classList.remove("active");
-    document.querySelectorAll(`.option`)[start+1].classList.remove("active");
-    event.target.classList.add("active");
-}
+// 交卷评分
+function submitExam(){
+    let score=0, right=[], wrong=[];
+    // 评分
+    for(let i=0;i<10;i++){ if(userAnswers[i]===allQuestions[i].a){score+=3;right.push(i+1);}else{wrong.push({t:i+1,ty:"单选",ans:allQuestions[i].a});} }
+    for(let i=10;i<20;i++){
+        let u=userAnswers[i]||[], a=allQuestions[i].a;
+        if(JSON.stringify(u.sort())===JSON.stringify(a.sort())){score+=4;right.push(i+1);}else{wrong.push({t:i+1,ty:"多选",ans:a.join("、")});}
+    }
+    for(let i=20;i<30;i++){ if(userAnswers[i]===allQuestions[i].a){score+=3;right.push(i+1);}else{wrong.push({t:i+1,ty:"判断",ans:allQuestions[i].a?"对":"错"});} }
+    
+    // 保存成绩
+    let sr = new ScoreRecord();
+    sr.set("name",userName); sr.set("score",score); sr.set("time",new Date().toLocaleString());
+    sr.save().catch(e=>console.log(e));
 
-// 提交评分
-function submitExam() {
-    let score = 0;
-    // 单选
-    examBank.single.forEach((q,i)=>{ if(userAnswers.single[i]===q.answer) score+=3; });
-    // 多选
-    examBank.multiple.forEach((q,i)=>{
-        let u = userAnswers.multiple[i]||[];
-        if(JSON.stringify(u.sort())===JSON.stringify(q.answer.sort())) score+=4;
-    });
-    // 判断
-    examBank.judge.forEach((q,i)=>{ if(userAnswers.judge[i]===q.answer) score+=3; });
-
-    allScores.push({name:userName, score:score, time:new Date().toLocaleString()});
-    localStorage.setItem("examScores", JSON.stringify(allScores));
-
-    document.getElementById("examPage").classList.add("hidden");
-    document.getElementById("resultPage").classList.remove("hidden");
-    document.getElementById("scoreResult").innerText = `得分：${score} 分（满分100）`;
+    // 显示结果
+    showPage("resultPage");
+    document.getElementById("scoreInfo").innerText = `得分：${score} 分 | 做对 ${right.length} 题`;
+    let errHtml = `<div class="wrong">❌ 错题解析：</div>`;
+    wrong.forEach(e=>{ errHtml += `<div class="analysis">${e.ty} ${e.t}题 → 正确答案：${e.ans}</div>`; });
+    document.getElementById("wrongDetail").innerHTML = errHtml;
 }
 
 // 后台
-function openAdmin() {
-    document.getElementById("loginPage").classList.add("hidden");
-    document.getElementById("adminPage").classList.remove("hidden");
-    refreshScore();
+function goAdmin(){ showPage("adminPage"); }
+function loginAdmin(){
+    if(document.getElementById("adminPwd").value!=="123456"){alert("密码错误！");return;}
+    new AV.Query("ScoreRecord").descending("createdAt").find().then(res=>{
+        let list = document.getElementById("scoreList");
+        list.innerHTML = "";
+        res.forEach(i=>{
+            let d = i.attributes;
+            list.innerHTML += `<div class="user-item">${d.time} | ${d.name} | ${d.score}分</div>`;
+        });
+    });
 }
 
-function refreshScore() {
-    let list = document.getElementById("scoreList");
-    list.innerHTML = "";
-    let data = JSON.parse(localStorage.getItem("examScores")||"[]");
-    data.forEach(item=>{
-        list.innerHTML += `<div class="user-item">姓名：${item.name} | 分数：${item.score} | 时间：${item.time}</div>`;
-    });
+function showPage(id){
+    document.querySelectorAll(".page").forEach(p=>p.classList.add("hidden"));
+    document.getElementById(id).classList.remove("hidden");
 }
 </script>
 </body>
